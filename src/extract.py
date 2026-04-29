@@ -5,7 +5,6 @@ import json
 
 load_dotenv()
 base_url = os.getenv("BASE_URL")
-channel_handle = os.getenv("CHANNEL_HANDLE")
 
 def get_api_key():
     load_dotenv()
@@ -32,6 +31,8 @@ def get_playlist_id(handle):
     res = req.get(f"{base_url}/channels",params=params | {"key": get_api_key()}).json()
 
     return res['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+
+
 def get_all_video_ids(playlistId):
     video_ids = []
     next_page_token = None
@@ -59,7 +60,7 @@ def get_all_video_ids(playlistId):
         # Si pas de token, on a fini !
         if not next_page_token:
             break
-
+    print(f"Total video ids fetched: {len(video_ids)}")
     return video_ids
 
 
@@ -92,7 +93,6 @@ def get_videos_data_batch(video_ids_list):
             "likeCount": statistics.get("likeCount"),
             "commentCount": statistics.get("commentCount"),
             "thumbnailUrl": snippet.get("thumbnails", {}).get("medium", {}).get("url"),
-            "categoryId": snippet.get("categoryId"),
             "topicCategories": topicDetails.get("topicCategories", [])
         }
         batch_data.append(video_data)
@@ -103,7 +103,7 @@ def get_all_videos_dataset(all_videos_ids):
     final_dataset = []
 
     for i in range(0, len(all_videos_ids), 50):
-
+        print(f"Batch {int(i/50 + 1)}")
         batch_ids = all_videos_ids[i:i+50]
 
         batch_data = get_videos_data_batch(batch_ids)
