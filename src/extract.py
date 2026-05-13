@@ -2,26 +2,40 @@ import os
 from dotenv import load_dotenv
 import requests as req
 import json
+from src.utils import get_api_key
 
 load_dotenv()
 base_url = os.getenv("BASE_URL")
 
-def get_api_key():
-    load_dotenv()
-    api_key = os.getenv("YOUTUBE_API_KEY")
-    if not api_key:
-        raise ValueError("API Key not found. Please check your .env file.")
-    return api_key
 
 
-def get_channel_id(handle):
+def get_channel_statistics(channel_id):
     params = {
-    "part": "id",
-    "forHandle": handle
+        "part": "snippet,statistics",
+        "id": channel_id
     }
-    res = req.get(f"{base_url}/channels",params=params | {"key": get_api_key()}).json()
 
-    return res['items'][0]['id']
+    res = req.get(f"{base_url}/channels", params=params | {"key": get_api_key()}).json()
+
+    items = res.get("items", [])
+    if not items:
+        return None
+
+    item = items[0]
+
+    snippet = item.get("snippet", {})
+    statistics = item.get("statistics", {})
+
+    channel_data = {
+        "channelId": item.get("id"),
+        "channelTitle": snippet.get("title"),
+        "publishedAt": snippet.get("publishedAt"),
+        "subscriberCount": statistics.get("subscriberCount"),
+        "viewCount": statistics.get("viewCount"),
+        "videoCount": statistics.get("videoCount")
+    }
+
+    return channel_data
 
 def get_playlist_id(handle):
     params = {
@@ -111,17 +125,3 @@ def get_all_videos_dataset(all_videos_ids):
         final_dataset.extend(batch_data)
 
     return final_dataset
-
-
-def save_data_to_json(data, filepath):
-    # 1. Extraire le chemin du dossier depuis le filepath complet
-    directory = os.path.dirname(filepath)
-
-    if directory:
-        os.makedirs(directory, exist_ok=True)
-
-    with open(filepath, 'w', encoding='utf-8') as file:
-
-        json.dump(data, file, indent=4, ensure_ascii=False)
-
-    print(f"✅ Données sauvegardées avec succès dans : {filepath}")

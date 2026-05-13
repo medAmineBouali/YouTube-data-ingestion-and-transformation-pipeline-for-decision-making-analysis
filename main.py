@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 from src.extract import (
     get_playlist_id,
     get_all_video_ids,
-    get_all_videos_dataset,
-    save_data_to_json
+    get_all_videos_dataset
 )
 from src.transform import transform_and_save
+from src.utils import download_banner,save_data_to_json,etl_channel_statistics
 
 
 def main():
@@ -21,6 +21,7 @@ def main():
     print(f"\n1. Fetching channel id for {channel_handle}")
     # Récupérer l’ID de la playlist "Uploads"
     playlist_id = get_playlist_id(channel_handle)
+
     print(f"\n2. Fetching all video ids ... ")
     # Récupérer tous les IDs des vidéos
     all_videos_ids = get_all_video_ids(playlist_id)
@@ -36,6 +37,9 @@ def main():
     save_data_to_json(final_dataset, raw_data_path)
 
     transform_and_save(raw_data_file_path='./data/raw/youtube_raw_data.json',save_folder_path="./data/processed/")
+
+    download_banner(handle=channel_handle,file_name="channel_banner.jpeg",folder_path="./powerbi/assets/")
+    etl_channel_statistics(handle=channel_handle,save_folder_path="./data/processed/")
 
 if __name__ == "__main__":
     main()
